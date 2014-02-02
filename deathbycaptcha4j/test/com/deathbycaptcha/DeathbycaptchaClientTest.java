@@ -15,7 +15,7 @@ public class DeathbycaptchaClientTest {
 
 	@Test
 	public void testSubmitNoLogin() throws Exception {
-		final DeathbycaptchaClient client = new DeathbycaptchaClient(requestFactory, 10000, 10000, Endpoint.HTTPS, null);
+		final DeathbycaptchaClient client = new DeathbycaptchaClient(requestFactory, 10000, 10000, Endpoint.HTTP, null);
 		try {
 			client.submit(null);
 			fail("Expected exception");
@@ -28,7 +28,7 @@ public class DeathbycaptchaClientTest {
 	
 	@Test
 	public void testSubmitNoCaptcha() throws Exception {
-		final DeathbycaptchaClient client = new DeathbycaptchaClient(requestFactory, 10000, 10000, Endpoint.HTTPS, login);
+		final DeathbycaptchaClient client = new DeathbycaptchaClient(requestFactory, 10000, 10000, Endpoint.HTTP, login);
 		try {
 			client.submit(null);
 			fail("Expected exception");
@@ -41,10 +41,13 @@ public class DeathbycaptchaClientTest {
 	
 	@Test
 	public void testSubmit() throws Exception {
-		final DeathbycaptchaClient client = new DeathbycaptchaClient(requestFactory, 10000, 10000, Endpoint.HTTPS, login);
+		final DeathbycaptchaClient client = new DeathbycaptchaClient(requestFactory, 10000, 10000, Endpoint.HTTP, login);
 
-		final CaptchaStatus status = client.submit(TestCaptcha.LOVE);
+		CaptchaStatus status = client.submit(TestCaptcha.LOVE);
 		assertNotNull(status.captcha);
+		while (status.text.isEmpty()) {
+			status = client.getStatus(status.captcha);
+		}
 		assertEquals("love", status.text);
 		assertTrue(status.is_correct);
 	}
@@ -73,13 +76,26 @@ public class DeathbycaptchaClientTest {
 	
 	@Test
 	public void testGetNotFound() throws Exception {
-		final DeathbycaptchaClient client = new DeathbycaptchaClient(requestFactory, 10000, 10000, Endpoint.HTTPS, null);
+		final DeathbycaptchaClient client = new DeathbycaptchaClient(requestFactory, 10000, 10000, Endpoint.HTTP, null);
 		try {
 			client.getStatus(80L);
 			fail("Expected exception.");
 		} catch (DeathbycaptchaException e) {
 			// Expected exception
 			assertEquals(0, e.error.status.intValue());
+		}
+	}
+	
+	@Test
+	public void testReportNoLogin() throws Exception {
+		final DeathbycaptchaClient client = new DeathbycaptchaClient(requestFactory, 10000, 10000, Endpoint.HTTP, null);
+		try {
+			client.report(3846475L);
+			fail("Expected exception.");
+		} catch (DeathbycaptchaException e) {
+			// Expected exception
+			assertEquals(255, e.error.status.intValue());
+			assertEquals(Error.ERROR_NOT_LOGGED_IN, e.error.error);
 		}
 	}
 }

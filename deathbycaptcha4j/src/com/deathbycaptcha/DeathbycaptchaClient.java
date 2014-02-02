@@ -3,6 +3,8 @@ package com.deathbycaptcha;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.HashMap;
+import java.util.Map;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.client.http.ByteArrayContent;
@@ -11,6 +13,7 @@ import com.google.api.client.http.HttpContent;
 import com.google.api.client.http.HttpRequest;
 import com.google.api.client.http.HttpRequestFactory;
 import com.google.api.client.http.HttpResponse;
+import com.google.api.client.http.UrlEncodedContent;
 
 public class DeathbycaptchaClient {
 	public static final ObjectMapper mapper = new ObjectMapper();
@@ -30,7 +33,6 @@ public class DeathbycaptchaClient {
 			this.url = url;
 		}
 	}
-	
 	
 	public DeathbycaptchaClient(HttpRequestFactory requestFactory, Integer connectTimeout, Integer readTimeout,
 			Endpoint endpoint, Login login) {
@@ -108,6 +110,39 @@ public class DeathbycaptchaClient {
 	
 	public CaptchaStatus getStatus(Long id) throws IOException, DeathbycaptchaException {
 		final HttpRequest request = requestFactory.buildGetRequest(new GenericUrl(endpoint.url + "captcha/" + id));
+        if (connectTimeout != null) {
+        	request.setConnectTimeout(connectTimeout.intValue());
+        }
+        if (readTimeout != null) {
+        	request.setReadTimeout(readTimeout);
+        }
+        request.getHeaders().setAccept("application/json");
+        request.setThrowExceptionOnExecuteError(false);
+        
+        final HttpResponse response = request.execute();
+        try {
+        	if (!response.isSuccessStatusCode()) {
+        		throw new DeathbycaptchaException(mapper.readValue(response.getContent(), Error.class));
+        	}
+        	return mapper.readValue(response.getContent(), CaptchaStatus.class);
+        } finally {
+        	response.ignore();
+        }
+	}
+	
+	public CaptchaStatus report(Long id) throws IOException, DeathbycaptchaException {
+		final Map<String, String> params = new HashMap<String, String>();
+    	if (login != null) {
+    		if (login.username != null) {
+    			params.put("username", login.username);
+    		}
+    		if (login.password != null) {
+    			params.put("password", login.password);
+    		}
+    	}
+		
+		final HttpRequest request = requestFactory.buildPostRequest(
+				new GenericUrl(endpoint.url + "captcha/" + id + "/report"), new UrlEncodedContent(params));
         if (connectTimeout != null) {
         	request.setConnectTimeout(connectTimeout.intValue());
         }

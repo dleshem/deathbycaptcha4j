@@ -2,6 +2,7 @@ package com.deathbycaptcha;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.Map;
@@ -100,7 +101,7 @@ public class DeathbycaptchaClient {
         final HttpResponse response = request.execute();
         try {
         	if (!response.isSuccessStatusCode()) {
-        		throw new DeathbycaptchaException(mapper.readValue(response.getContent(), Error.class));
+        		throwSpecificException(response.getContent());
         	}
         	return mapper.readValue(response.getContent(), CaptchaStatus.class);
         } finally {
@@ -122,7 +123,7 @@ public class DeathbycaptchaClient {
         final HttpResponse response = request.execute();
         try {
         	if (!response.isSuccessStatusCode()) {
-        		throw new DeathbycaptchaException(mapper.readValue(response.getContent(), Error.class));
+        		throwSpecificException(response.getContent());
         	}
         	return mapper.readValue(response.getContent(), CaptchaStatus.class);
         } finally {
@@ -155,11 +156,26 @@ public class DeathbycaptchaClient {
         final HttpResponse response = request.execute();
         try {
         	if (!response.isSuccessStatusCode()) {
-        		throw new DeathbycaptchaException(mapper.readValue(response.getContent(), Error.class));
+        		throwSpecificException(response.getContent());
         	}
         	return mapper.readValue(response.getContent(), CaptchaStatus.class);
         } finally {
         	response.ignore();
         }
+	}
+	
+	private void throwSpecificException(InputStream is) throws IOException, DeathbycaptchaException {
+		final Error error = mapper.readValue(is, Error.class);
+		if (error.error != null) {
+			switch (error.error) {
+			case Error.ERROR_INVALID_CAPTCHA:
+				throw new InvalidCaptchaException(error);
+			case Error.ERROR_NOT_LOGGED_IN:
+				throw new NotLoggedInException(error);
+			case Error.ERROR_SERVICE_OVERLOAD:
+				throw new ServiceOverloadException(error);
+			}
+		}
+		throw new DeathbycaptchaException(error);
 	}
 }

@@ -19,10 +19,8 @@ public class DeathbycaptchaClientTest {
 		try {
 			client.submit(null);
 			fail("Expected exception");
-		} catch (DeathbycaptchaException e) {
+		} catch (NotLoggedInException e) {
 			// Expected exception
-			assertEquals(255, e.error.status.intValue());
-			assertEquals(Error.ERROR_NOT_LOGGED_IN, e.error.error);
 		}
 	}
 	
@@ -32,10 +30,8 @@ public class DeathbycaptchaClientTest {
 		try {
 			client.submit(null);
 			fail("Expected exception");
-		} catch (DeathbycaptchaException e) {
+		} catch (InvalidCaptchaException e) {
 			// Expected exception
-			assertEquals(255, e.error.status.intValue());
-			assertEquals(Error.ERROR_INVALID_CAPTCHA, e.error.error);
 		}
 	}
 	
@@ -82,6 +78,7 @@ public class DeathbycaptchaClientTest {
 			fail("Expected exception.");
 		} catch (DeathbycaptchaException e) {
 			// Expected exception
+			assertNull(e.error.error);
 			assertEquals(0, e.error.status.intValue());
 		}
 	}
@@ -92,10 +89,8 @@ public class DeathbycaptchaClientTest {
 		try {
 			client.report(3846475L);
 			fail("Expected exception.");
-		} catch (DeathbycaptchaException e) {
+		} catch (NotLoggedInException e) {
 			// Expected exception
-			assertEquals(255, e.error.status.intValue());
-			assertEquals(Error.ERROR_NOT_LOGGED_IN, e.error.error);
 		}
 	}
 }

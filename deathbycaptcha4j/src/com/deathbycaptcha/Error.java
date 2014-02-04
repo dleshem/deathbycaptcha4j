@@ -12,6 +12,7 @@ public class Error implements Serializable {
     
     public static final String ERROR_NOT_LOGGED_IN = "not-logged-in";
     public static final String ERROR_INVALID_CAPTCHA = "invalid-captcha";
+    public static final String ERROR_SERVICE_OVERLOAD = "service-overload";
     
     /** Default constructor for JSON deserialization. */
     public Error() {}
